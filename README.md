@@ -1,6 +1,6 @@
 # Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation
 
-Repository for [Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation]( ) (under review at AMIA 2021 INFORMATICS SUMMIT)
+Repository for [Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation](http://arxiv.org/abs/2009.00694) (under review at AMIA 2021 INFORMATICS SUMMIT)
 
  
 #### Note
