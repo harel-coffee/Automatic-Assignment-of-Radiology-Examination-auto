@@ -1,6 +1,6 @@
 # Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation
 
-Repository for [Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation](http://arxiv.org/abs/2009.00694) (under review at AMIA 2021 INFORMATICS SUMMIT)
+Repository for [Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation](http://arxiv.org/abs/2009.00694) (accepted at AMIA 2021 Annual Symposium)
 
  
 #### Note
@@ -16,11 +16,11 @@ Wilson Lau, Laura Aaltonen, MD PhD, Martin Gunn, MB ChB, Meliha Yetisgen, PhD
 @article{ wilson2021amiasummit,
     title = "Automatic Assignment of Radiology Examination Protocols Using Pre-trained Language Models with Knowledge Distillation",
     author = "Wilson Lau, Laura Aaltonen, MD PhD, Martin Gunn, MB ChB, Meliha Yetisgen, PhD",
-    journal = "AMIA 2021 Virtual Informatics Summit,
+    journal = "AMIA 2021 Annual Symposium,
     month = march,
     year = "2021", 
     publisher = "American Medical Informatics Association",
-    note = "submitted",
+    note = "accepted",
     url = "http://arxiv.org/abs/2009.00694"
 }
 ```
