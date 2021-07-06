@@ -84,7 +84,8 @@ class BERTDataset(Dataset):
                 sent,
                 add_special_tokens=True,
                 max_length=self.maxlen,
-                pad_to_max_length=True
+                pad_to_max_length=True,
+                truncation=True
             )
 
             self.inputIDs.append(encoded_doc)

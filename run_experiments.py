@@ -9,7 +9,7 @@ import pickle
 from nltk.classify import MaxentClassifier
 from sklearn import preprocessing, svm
 from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import precision_recall_fscore_support,classification_report
@@ -17,6 +17,7 @@ from imblearn.over_sampling import RandomOverSampler
 from nltk.util import ngrams
 import torch
 import random
+from collections import Counter
 from augmentation import get_POS,augment
 from model import BERT
 
@@ -78,23 +79,22 @@ class auto():
         self.X_train,self.Y_train = oversample.fit_resample([[x] for x in self.X_train], self.Y_train)
         self.X_train = [x[0] for x in self.X_train]
 
-
     def downsample(self, n=2):
-        max = len(self.data.index[self.data ['groupID'] == groups[n]].tolist())
-        drop_idx=[]
+        cnt = sorted(Counter(self.Y_train).items(),
+                     key=lambda item: (-item[1]))
+        train_data = pd.DataFrame(zip(self.X_train, self.Y_train))
+        train_data.columns = ['X', 'Y']
+        max = cnt[n][1]
+        drop_idx = []
         for i in range(n):
-            no_history = self.data .index[(self.data ['groupID'] == groups[i])& (self.data ['History'] == '')].tolist()
-            g = self.data .index[(self.data ['groupID'] == groups[i])& (self.data ['History'] != '')].tolist()
-            all = self.data .index[(self.data ['groupID'] == groups[i])].tolist()
-            if( len(g)  > max ):
-                drop_idx.extend(no_history)
-                drop_idx.extend(random.sample(g, len(g)  - max))
-            else:
-                drop_idx.extend(random.sample(all, len(all) - max))
+            g = [g for g, _ in enumerate(self.Y_train) if self.Y_train[g] == groups[i]]
+            if (len(g) > max):
+                drop_idx.extend(random.sample(g, len(g) - max))
 
-        self.data = self.data .drop(index=drop_idx)
-        self.data.reset_index(drop=True, inplace=True)
-
+        train_data = train_data.drop(index=drop_idx)
+        train_data.reset_index(drop=True, inplace=True)
+        self.X_train  = train_data['X'].to_list()
+        self.Y_train  = train_data['Y'].to_list()
 
     def print_size(self,data, groups):
         for g in groups:
@@ -133,9 +133,6 @@ class auto():
                 self.data = self.data.groupby('groupID').apply(lambda x: x.sample(min(len(x), 25))).sample(
                     frac=1).reset_index(drop=True)
                 self.data = self.data[0:100]
-
-            if self.args.downsample>0:
-                self.downsample(args.downsample)
 
             data_group = self.data.copy()
             self.print_size(data_group,self.groups)
@@ -258,7 +255,7 @@ class auto():
                     self.features_coded_training = self.features_coded_training .apply(pd.to_numeric)
                     self.features_coded_validation = self.features_coded_validation .apply(pd.to_numeric)
 
-            if (self.args.type in [ 'svm' ,'decisiontree','randomforest'] ):
+            if (self.args.type in [ 'svm' ,'decisiontree','randomforest', 'gbm'] ):
                 if self.args.notes:
                     self.features = self.tfidf.fit_transform(self.X_train).toarray()
                     self.features_validation = self.tfidf.transform(self.X_validation).toarray()
@@ -338,6 +335,8 @@ class auto():
 
             if self.args.oversample:
                 self.oversample()
+            elif self.args.downsample > 0:
+                self.downsample(self.args.downsample)
 
             models = BERT(  self.X_train, self.X_validation,self.Y_train, self.Y_train_softlabels if self.args.distill else None,
                              self.Y_validation, self.args,
@@ -354,6 +353,8 @@ class auto():
                 models = RandomForestClassifier( random_state=0, n_estimators=10,max_features=None)
             elif self.args.type == 'decisiontree':
                 models = DecisionTreeClassifier( random_state=43)
+            elif self.args.type == 'gbm':
+                models = GradientBoostingClassifier( random_state=0)
 
             print('training ... fold_{}_model_{}'.format(fold, self.args.type))
             models.fit(self.features, self.Y_train)
@@ -396,9 +397,9 @@ if __name__ == '__main__':
     parser.add_argument('--nn_model',default='bert-base-uncased')
     parser.add_argument('--earlystop',action='store_true', default=False)
     parser.add_argument('--patience', default=5, type=int )
-    parser.add_argument('--epochs', default=10, type=int)
-    parser.add_argument('--maxlen', default=512, type=int)
-    parser.add_argument('--learning_rate', type=float, default=5e-5)
+    parser.add_argument('--epochs', default=4, type=int)
+    parser.add_argument('--maxlen', default=200, type=int)
+    parser.add_argument('--learning_rate', type=float, default=2e-5)
     parser.add_argument('--augment', action='store_true', default=False)
     parser.add_argument('--augment_size', type=int, default=200)
     parser.add_argument('--augment_per_instance', type=int, default=30)
@@ -406,7 +407,6 @@ if __name__ == '__main__':
     parser.add_argument('--softlabels',  action='store_true', default=False)
     parser.add_argument('--distill',  action='store_true', default=False)
     parser.add_argument('--distill_weight', type=float, default=0)
-
 
     args = parser.parse_args()
 
